@@ -1,3 +1,4 @@
+import tkinter as tk
 import math
 
 def BoardPrint(board):
@@ -63,39 +64,73 @@ def best_move(board):
                 move = i
     return move
 
-def main():
-    print("-----------------------------------------------------------------------")
-    print("----------------------------Welcome In---------------------------------")
-    print("--------------------------- Tic Tac Toe -------------------------------")
-    print("--------------------------- Game(T T T) -------------------------------")
-    print("-----------------------------------------------------------------------")
+class TicTacToe:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Tic Tac Toe")
+        self.board = [''] * 9
+        self.turn = 'X'
+        self.buttons = []
+        self.create_buttons()
+        self.status_label = tk.Label(root, text="Player X's turn", font=('Helvetica', 14))
+        self.status_label.pack(side="bottom")
+        self.restart_button = None
 
-    board = [''] * 9
-    turn = 'X'
+    def create_buttons(self):
+        frame = tk.Frame(self.root)
+        frame.pack()
+        for i in range(9):
+            button = tk.Button(frame, text='', font=('Helvetica', 20), width=5, height=2, command=lambda i=i: self.player_move(i))
+            button.grid(row=i//3, column=i%3)
+            self.buttons.append(button)
 
-    while True:
-        BoardPrint(board)
-        if turn == 'X':
-            value = int(input("\nEnter the value (0-8): "))
-            if board[value] == '':
-                board[value] = 'X'
-                turn = 'O'
-            else:
-                print("Invalid move! Try again.")
-        else:
-            print("\nComputer's turn (O):")
-            move = best_move(board)
-            board[move] = 'O'
-            turn = 'X'
+    def player_move(self, index):
+        if self.board[index] == '' and self.turn == 'X':
+            self.board[index] = 'X'
+            self.buttons[index].config(text='X')
+            self.turn = 'O'
+            self.status_label.config(text="Computer's turn (O)")
+            self.check_game_status()
+            self.root.after(500, self.computer_move)
 
-        winner = CheckWin(board)
+    def computer_move(self):
+        move = best_move(self.board)
+        if move != -1:
+            self.board[move] = 'O'
+            self.buttons[move].config(text='O')
+            self.turn = 'X'
+            self.status_label.config(text="Player X's turn")
+        self.check_game_status()
+
+    def check_game_status(self):
+        winner = CheckWin(self.board)
         if winner:
-            BoardPrint(board)
             if winner == 'Tie':
-                print("\nThe game is a tie!")
+                self.status_label.config(text="The game is a tie!")
             else:
-                print(f"\n{winner} wins the game!")
-            break
+                self.status_label.config(text=f"{winner} wins the game!")
+            self.disable_buttons()
+            self.show_restart_button()
 
-    print("Thanks For Playing ")
+    def disable_buttons(self):
+        for button in self.buttons:
+            button.config(state="disabled")
 
+    def show_restart_button(self):
+        if not self.restart_button:
+            self.restart_button = tk.Button(self.root, text="Restart Game", font=('Helvetica', 14), command=self.restart_game)
+            self.restart_button.pack(side="bottom")
+
+    def restart_game(self):
+        self.board = [''] * 9
+        self.turn = 'X'
+        for button in self.buttons:
+            button.config(text='', state="normal")
+        self.status_label.config(text="Player X's turn")
+        if self.restart_button:
+            self.restart_button.pack_forget()
+            self.restart_button = None
+
+root = tk.Tk()
+game = TicTacToe(root)
+root.mainloop()
